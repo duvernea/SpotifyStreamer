@@ -1,0 +1,18 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!-- Artist search fragment -->
+    <dimen name="artist_text_size">24sp</dimen>
+    <!-- <dimen name="list_item_left_margin">5dp</dimen>  -->
+    <dimen name="list_item_top_margin">10dp</dimen>
+    <dimen name="list_item_bottom_margin">10dp</dimen>
+    <dimen name="imageview_right_margin">15dp</dimen>
+    <dimen name="imageview_dimen">80dp</dimen>
+
+    <!-- Track list fragment -->
+    <dimen name="track_text_margin">2dp</dimen>
+    <dimen name="track_text_size">16sp</dimen>
+
+</resources>

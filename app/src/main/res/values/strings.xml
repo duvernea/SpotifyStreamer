@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">SpotifyStreamer</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="artist_search_hint_text">Search for Artist</string>
+    <string name="title_activity_artist_detail">Top 10 Tracks</string>
+
+    <string name="toast_no_artists_found">No artists found. Please refine search.</string>
+    <string name="no_tracks_message">No top tracks for this artist.</string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="@dimen/imageview_dimen"
+        android:layout_height="@dimen/imageview_dimen"
+        android:id="@+id/artist_list_item_imageview"
+        android:src="@android:drawable/ic_menu_gallery"
+
+        android:layout_marginTop="@dimen/list_item_top_margin"
+        android:layout_marginBottom="@dimen/list_item_bottom_margin"
+        android:layout_marginRight="@dimen/imageview_right_margin"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="artist1"
+        android:id="@+id/artist_list_item_textview"
+        android:gravity="center_vertical"
+        android:textSize="@dimen/artist_text_size" />
+
+</LinearLayout>
