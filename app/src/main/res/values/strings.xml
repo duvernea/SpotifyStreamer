@@ -8,4 +8,8 @@
 
     <string name="toast_no_artists_found">No artists found. Please refine search.</string>
     <string name="no_tracks_message">No top tracks for this artist.</string>
+    <string name="spotify_connection_error">Cannot connect to spotify.</string>
+    <string name="network_connection_error">Cannot connect to network.</string>
+
+
 </resources>

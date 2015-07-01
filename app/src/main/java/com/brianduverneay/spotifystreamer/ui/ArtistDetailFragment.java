@@ -2,6 +2,8 @@ package com.brianduverneay.spotifystreamer.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import retrofit.RetrofitError;
 
 
 /**
@@ -51,6 +54,10 @@ public class ArtistDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        if (savedInstanceState == null || savedInstanceState.containsKey("")) {
+
+        }
+
         View rootView = inflater.inflate(R.layout.fragment_artist_detail, container);
         mContext = getActivity();
 
@@ -71,20 +78,53 @@ public class ArtistDetailFragment extends Fragment {
 
     private class TopTracks extends AsyncTask<String, Void, List<Track>> {
 
+        private boolean exceptionThrown=false;
+        private boolean networkConnection=false;
+
         @Override
         protected List<Track> doInBackground(String... params) {
-            mApi = new SpotifyApi();
-            mSpotify = mApi.getService();
+            ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+
             HashMap<String, Object> queryMap = new HashMap<String, Object>();
             queryMap.put(QUERY_COUNTRY, US_COUNTRY_CODE);
-            Tracks results = mSpotify.getArtistTopTrack(params[0], queryMap);
+            Tracks results;
 
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                networkConnection = true;
+                //network connected
+                mApi = new SpotifyApi();
+                mSpotify = mApi.getService();
+                try {
+                    results = mSpotify.getArtistTopTrack(params[0], queryMap);
+                } catch (RetrofitError e) {
+                    exceptionThrown = true;
+                    return null;
+                }
+            }
+            else {
+                networkConnection=false;
+                return null;
+            }
             return results.tracks;
         }
 
         @Override
         protected void onPostExecute(List<Track> tracks) {
             super.onPostExecute(tracks);
+            if (mToast != null) {
+                mToast.cancel();
+            }
+            if (!networkConnection) {
+                mToast = Toast.makeText(mContext, getResources().getString(R.string.network_connection_error), Toast.LENGTH_SHORT);
+                mToast.show();
+                return;
+            }
+            if (exceptionThrown) {
+                mToast = Toast.makeText(mContext, getResources().getString(R.string.spotify_connection_error), Toast.LENGTH_SHORT);
+                mToast.show();
+                return;
+            }
             if (tracks.size() > 0) {
 
                 mTrackAdapter.clear();

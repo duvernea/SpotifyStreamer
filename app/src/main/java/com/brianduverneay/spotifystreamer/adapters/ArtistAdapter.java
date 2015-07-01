@@ -1,6 +1,7 @@
 package com.brianduverneay.spotifystreamer.adapters;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,10 @@ import com.brianduverneay.spotifystreamer.music_model.MyAppArtist;
 import com.brianduverneay.spotifystreamer.R;
 import com.squareup.picasso.Picasso;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -25,7 +30,6 @@ public class ArtistAdapter extends ArrayAdapter<MyAppArtist> {
     public ArtistAdapter(Context context, List<MyAppArtist> appArtists) {
         super(context, 0, appArtists);
     }
-
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         mContext = getContext();
@@ -36,10 +40,17 @@ public class ArtistAdapter extends ArrayAdapter<MyAppArtist> {
         textView.setText(appArtist.getName());
 
         ImageView imageView = (ImageView) rootView.findViewById(R.id.artist_list_item_imageview);
-        if (!appArtist.getImage().equals("")) {
+        String imageUrl = appArtist.getImage();
+        if (!imageUrl.equals("")) {
             int imageDimen = (int) mContext.getResources().getDimension(R.dimen.imageview_dimen);
-            Picasso.with(mContext).load(appArtist.getImage()).resize(imageDimen, imageDimen).centerCrop().into(imageView);
-        } else {
+            try {
+                URL url = new URL(imageUrl);
+                Picasso.with(mContext).load(imageUrl).resize(imageDimen, imageDimen).centerCrop().into(imageView);
+            } catch (MalformedURLException e) {
+                imageView.setImageDrawable(mContext.getResources().getDrawable(R.drawable.no_artist_icon));
+            }
+        }
+         else {
             imageView.setImageDrawable(mContext.getResources().getDrawable(R.drawable.no_artist_icon));
         }
         return rootView;

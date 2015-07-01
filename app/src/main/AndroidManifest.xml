@@ -3,6 +3,9 @@
     package="com.brianduverneay.spotifystreamer" >
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
 
     <application
         android:allowBackup="true"
@@ -11,7 +14,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".ui.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:configChanges="orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -21,6 +25,7 @@
         <activity
             android:name=".ui.ArtistDetail"
             android:label="@string/title_activity_artist_detail"
+            android:configChanges="orientation|screenSize"
             android:parentActivityName=".ui.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

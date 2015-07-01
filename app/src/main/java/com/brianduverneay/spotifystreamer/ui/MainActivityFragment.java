@@ -2,6 +2,8 @@ package com.brianduverneay.spotifystreamer.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -29,6 +31,7 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Image;
+import retrofit.RetrofitError;
 
 
 /**
@@ -102,6 +105,9 @@ public class MainActivityFragment extends Fragment {
     }
     private class SearchArtist extends AsyncTask<String, Void, ArtistsPager> {
 
+        private boolean exceptionThrown=false;
+        private boolean networkConnection=false;
+
         @Override
         protected ArtistsPager doInBackground(String... params) {
             if (mToast != null) {
@@ -111,11 +117,30 @@ public class MainActivityFragment extends Fragment {
             if (searchTerm.length()==0) {
                 return null;
             }
-            mApi = new SpotifyApi();
-            mSpotify = mApi.getService();
-            ArtistsPager results = mSpotify.searchArtists(searchTerm);
-            List<Artist>  artistList = results.artists.items;
-            if (artistList.size() == 0) {
+            ArtistsPager results;
+            List<Artist> artistList;
+            ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                networkConnection=true;
+                //network connected
+                mApi = new SpotifyApi();
+                mSpotify = mApi.getService();
+
+
+                try {
+                    results = mSpotify.searchArtists(searchTerm);
+                    artistList = results.artists.items;
+                } catch (RetrofitError e) {
+                    exceptionThrown = true;
+                    return null;
+                }
+                if (artistList.size() == 0) {
+                    return null;
+                }
+            }
+            else {
+                networkConnection=false;
                 return null;
             }
             return results;
@@ -124,6 +149,20 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(ArtistsPager a) {
             super.onPostExecute(a);
+            if (mToast != null) {
+                mToast.cancel();
+            }
+            if (!networkConnection) {
+                mToast = Toast.makeText(mContext, getResources().getString(R.string.network_connection_error), Toast.LENGTH_SHORT);
+                mToast.show();
+                return;
+            }
+            if (exceptionThrown) {
+                mToast = Toast.makeText(mContext, getResources().getString(R.string.spotify_connection_error), Toast.LENGTH_SHORT);
+                mToast.show();
+                return;
+            }
+
             mArtistAdapter.clear();
             if (a != null) {
                 for (Artist artist : a.artists.items) {
