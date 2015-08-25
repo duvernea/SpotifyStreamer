@@ -1,52 +1,62 @@
 package com.brianduverneay.spotifystreamer.adapters;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.brianduverneay.spotifystreamer.music_model.MyAppTrack;
 import com.brianduverneay.spotifystreamer.R;
+import com.brianduverneay.spotifystreamer.ui.ArtistDetailFragment;
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
-
-/**
- * Created by duvernea on 6/28/15.
- */
-public class TrackAdapter extends ArrayAdapter<MyAppTrack> {
+public class TrackAdapter extends CursorAdapter {
 
     private Context mContext;
 
-    public TrackAdapter(Context context, List<MyAppTrack> appTracks) {
-        super(context, 0, appTracks);
+    public TrackAdapter(Context context, Cursor c, int flags) {
+        super(context, c, flags);
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View newView(Context context, Cursor cursor, ViewGroup parent) {
+        View view = LayoutInflater.from(context).inflate(R.layout.track_list_item, parent, false);
+        ViewHolder viewHolder = new ViewHolder(view);
+        view.setTag(viewHolder);
+        return view;
+    }
 
-        mContext = getContext();
-        MyAppTrack appTrack = getItem(position);
-        View rootView = LayoutInflater.from(getContext()).inflate(R.layout.track_list_item, parent, false);
+    @Override
+    public void bindView(View view, Context context, Cursor cursor) {
+        ViewHolder viewHolder = (ViewHolder) view.getTag();
+        String albumName = cursor.getString(ArtistDetailFragment.COL_ALBUM_NAME);
+        String trackName = cursor.getString((ArtistDetailFragment.COL_TRACK_NAME));
+        String albumImage = cursor.getString(ArtistDetailFragment.COL_IMAGE_THUMB);
 
-        TextView songTitleTextView = (TextView) rootView.findViewById(R.id.track_list_item_songtitle);
-        songTitleTextView.setText(appTrack.getTrackName());
+        viewHolder.mAlbumTitleTextView.setText(albumName);
+        viewHolder.mSongTitleTextView.setText(trackName);
 
-        TextView albumTitleTextView = (TextView) rootView.findViewById(R.id.track_list_item_albumtitle);
-        albumTitleTextView.setText(appTrack.getAlbumName());
-
-
-        ImageView imageView = (ImageView) rootView.findViewById(R.id.track_list_item_albumcover);
-
-        if (!appTrack.getAlbumCover().equals("")) {
-            int imageDimen = (int) mContext.getResources().getDimension(R.dimen.imageview_dimen);
-            Picasso.with(mContext).load(appTrack.getAlbumCover()).resize(imageDimen, imageDimen).centerCrop().into(imageView);
+        if (!albumImage.equals("")) {
+            int imageDimen = (int) context.getResources().getDimension(R.dimen.imageview_dimen);
+            Picasso.with(context).load(albumImage).resize(imageDimen, imageDimen)
+                    .centerCrop().into(viewHolder.mAlbumImage);
         } else {
-            imageView.setImageDrawable(mContext.getResources().getDrawable(R.drawable.no_artist_icon));
+            viewHolder.mAlbumImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.no_artist_icon));
         }
-        return rootView;
+    }
+
+    public static class ViewHolder {
+        public final TextView mSongTitleTextView;
+        public final TextView mAlbumTitleTextView;
+        public final ImageView mAlbumImage;
+
+        public ViewHolder(View view) {
+            mSongTitleTextView = (TextView) view.findViewById(R.id.track_list_item_songtitle);
+            mAlbumTitleTextView = (TextView) view.findViewById(R.id.track_list_item_albumtitle);
+            mAlbumImage = (ImageView) view.findViewById(R.id.track_list_item_albumcover);
+        }
     }
 }

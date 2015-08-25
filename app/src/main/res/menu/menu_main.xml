@@ -4,4 +4,9 @@
 
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />
+
+    <item android:id="@+id/action_now_playing"
+        android:title="Now Playing"
+        app:showAsAction="always"/>
+
 </menu>

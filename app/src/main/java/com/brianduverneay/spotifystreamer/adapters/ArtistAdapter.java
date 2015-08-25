@@ -1,8 +1,6 @@
 package com.brianduverneay.spotifystreamer.adapters;
 
 import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,14 +13,10 @@ import com.brianduverneay.spotifystreamer.R;
 import com.squareup.picasso.Picasso;
 
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
-/**
- * Created by duvernea on 6/27/15.
- */
+
 public class ArtistAdapter extends ArrayAdapter<MyAppArtist> {
 
     private Context mContext;

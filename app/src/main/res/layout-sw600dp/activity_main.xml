@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="@android:color/black"
+    android:baselineAligned="false"
+    tools:context="com.brianduverneay.SpotifyStreamer.ui.MainActivity"
+    android:showDividers="middle"
+    android:id="@+id/linear_layout_main">
+
+
+    <fragment
+        android:id="@+id/fragment_artistsearch"
+        android:name="com.brianduverneay.spotifystreamer.ui.MainActivityFragment"
+        tools:layout="@layout/fragment_main"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="7"/>
+
+
+    <FrameLayout
+        android:id="@+id/artist_detail_container"
+        tools:layout="@layout/fragment_artist_detail"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="10"/>
+
+</LinearLayout>

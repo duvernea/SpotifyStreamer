@@ -1,18 +1,26 @@
 package com.brianduverneay.spotifystreamer.music_model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by duvernea on 6/28/15.
  */
-public class MyAppTrack {
+public class MyAppTrack implements Parcelable {
 
     private String mTrackName;
     private String mAlbumName;
-    private String mAlbumCover;
+    private String mAlbumCoverThumb;
+    private String mTrackId;
+    private String mPreviewUrl;
 
-    public MyAppTrack(String track, String albumname, String albumcover) {
+    public MyAppTrack(String track, String albumname, String albumcover, String url, String trackId) {
         mTrackName = track;
         mAlbumName = albumname;
-        mAlbumCover = albumcover;
+        mAlbumCoverThumb = albumcover;
+        mPreviewUrl = url;
+        mTrackId = trackId;
+
     }
 
     public String getTrackName() {
@@ -23,6 +31,14 @@ public class MyAppTrack {
         this.mTrackName = mTrackName;
     }
 
+    public String getPreviewUrl() {
+        return mPreviewUrl;
+    }
+
+    public void setPreviewUrl(String mPreviewUrl) {
+        this.mPreviewUrl = mPreviewUrl;
+    }
+
     public String getAlbumName() {
         return mAlbumName;
     }
@@ -31,11 +47,22 @@ public class MyAppTrack {
         this.mAlbumName = mAlbumName;
     }
 
-    public String getAlbumCover() {
-        return mAlbumCover;
+    public String getAlbumCoverThumb() {
+        return mAlbumCoverThumb;
     }
 
-    public void setAlbumCover(String mAlbumCover) {
-        this.mAlbumCover = mAlbumCover;
+    public void setAlbumCoverThumb(String mAlbumCover) {
+        this.mAlbumCoverThumb = mAlbumCover;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mTrackId);
+
     }
 }

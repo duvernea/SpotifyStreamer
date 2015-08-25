@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">SpotifyStreamer</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_music_player">MusicPlayerActivity</string>
 
     <string name="artist_search_hint_text">Search for Artist</string>
     <string name="title_activity_artist_detail">Top 10 Tracks</string>
@@ -10,6 +11,144 @@
     <string name="no_tracks_message">No top tracks for this artist.</string>
     <string name="spotify_connection_error">Cannot connect to spotify.</string>
     <string name="network_connection_error">Cannot connect to network.</string>
+    <string name="no_more_tracks_message">No more tracks</string>
 
 
+    <string name="action_share">Share</string>
+
+    <string name="pref_country_key" translatable="false">country</string>
+    <string name="pref_country_label">Country</string>
+    <string name="pref_country_default">US</string>
+
+    <string name="pref_enable_notifications_key" translatable="false">enable_notifications</string>
+    <string name="pref_enable_notifications_label">Notifications</string>
+    <string name="pref_enable_notifications_true">Enabled</string>
+    <string name="pref_enable_notifications_false">Not Enabled</string>
+    <string name="pref_enable_notifications_default" translatable="false">true</string>
+
+    <string-array name="country_codes">
+        <item>AD</item>
+        <item>AR</item>
+        <item>AU</item>
+        <item>AT</item>
+        <item>BE</item>
+        <item>BO</item>
+        <item>BR</item>
+        <item>BG</item>
+        <item>CA</item>
+        <item>CH</item>
+        <item>CL</item>
+        <item>CO</item>
+        <item>CR</item>
+        <item>CY</item>
+        <item>DK</item>
+        <item>DO</item>
+        <item>EC</item>
+        <item>SV</item>
+        <item>EE</item>
+        <item>FI</item>
+        <item>FR</item>
+        <item>DE</item>
+        <item>GR</item>
+        <item>GT</item>
+        <item>HN</item>
+        <item>HK</item>
+        <item>HU</item>
+        <item>IS</item>
+        <item>IE</item>
+        <item>IT</item>
+        <item>LV</item>
+        <item>LI</item>
+        <item>LT</item>
+        <item>LU</item>
+        <item>MY</item>
+        <item>MT</item>
+        <item>MX</item>
+        <item>MC</item>
+        <item>NL</item>
+        <item>NI</item>
+        <item>NZ</item>
+        <item>NO</item>
+        <item>PA</item>
+        <item>PY</item>
+        <item>PE</item>
+        <item>PH</item>
+        <item>PL</item>
+        <item>PT</item>
+        <item>RO</item>
+        <item>SG</item>
+        <item>SK</item>
+        <item>SI</item>
+        <item>ES</item>
+        <item>SE</item>
+        <item>CZ</item>
+        <item>TW</item>
+        <item>TR</item>
+        <item>GB</item>
+        <item>US</item>
+        <item>UY</item>
+    </string-array>
+
+    <string-array name="country_codes_human_readable">
+        <item>Andorra</item>
+        <item>Argentina</item>
+        <item>Australia</item>
+        <item>Austria</item>
+        <item>Belgium</item>
+        <item>Bolivia</item>
+        <item>Brazil</item>
+        <item>Bulgaria</item>
+        <item>Canada</item>
+        <item>Chile</item>
+        <item>Columbia</item>
+        <item>Costa Rica</item>
+        <item>Cyprus</item>
+        <item>Czech Republic</item>
+        <item>Denmark</item>
+        <item>Dominican Republic</item>
+        <item>Ecuador</item>
+        <item>El Salvador</item>
+        <item>Estonia</item>
+        <item>Finland</item>
+        <item>France</item>
+        <item>Germany</item>
+        <item>Greece</item>
+        <item>Guatemala</item>
+        <item>Honduras</item>
+        <item>Hong Kong</item>
+        <item>Hungary</item>
+        <item>Iceland</item>
+        <item>Ireland</item>
+        <item>Italy</item>
+        <item>Latvia</item>
+        <item>Liechtenstein</item>
+        <item>Lithuania</item>
+        <item>Luxembourg</item>
+        <item>Malaysia</item>
+        <item>Malta</item>
+        <item>Mexico</item>
+        <item>Monaco</item>
+        <item>Netherlands</item>
+        <item>Nicaragua</item>
+        <item>New Zealand</item>
+        <item>Norway</item>
+        <item>Panama</item>
+        <item>Paraguay</item>
+        <item>Peru</item>
+        <item>Philippines</item>
+        <item>Poland</item>
+        <item>Portugal</item>
+        <item>Romania</item>
+        <item>Singapore</item>
+        <item>Slovakia</item>
+        <item>Slovenia</item>
+        <item>Spain</item>
+        <item>Sweden</item>
+        <item>Switzerland</item>
+        <item>Taiwan</item>
+        <item>Turkey</item>
+        <item>United Kingdom</item>
+        <item>United States</item>
+        <item>Uruguay</item>
+    </string-array>
 </resources>

@@ -10,6 +10,8 @@
     <dimen name="list_item_bottom_margin">10dp</dimen>
     <dimen name="imageview_right_margin">15dp</dimen>
     <dimen name="imageview_dimen">80dp</dimen>
+    <dimen name="imageview_dimen_player">260dp</dimen>
+    <dimen name="imageview_dimen_player_large">360dp</dimen>
 
     <!-- Track list fragment -->
     <dimen name="track_text_margin">2dp</dimen>
