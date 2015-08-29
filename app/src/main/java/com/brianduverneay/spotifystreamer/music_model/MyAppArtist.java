@@ -1,9 +1,12 @@
 package com.brianduverneay.spotifystreamer.music_model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by duvernea on 6/18/15.
  */
-public class MyAppArtist {
+public class MyAppArtist implements Parcelable {
 
     private String mName;
     private String mId;
@@ -13,6 +16,12 @@ public class MyAppArtist {
         this.mName = mName;
         this.mId = mId;
         this.mImage = mImage;
+    }
+    private MyAppArtist(Parcel in) {
+        super();
+        mName = in.readString();
+        mId = in.readString();
+        mImage = in.readString();
     }
 
     public String getName() {
@@ -38,4 +47,31 @@ public class MyAppArtist {
     public void setImage(String mImage) {
         this.mImage = mImage;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+    public String toString() {
+        return mName + "--" + mId + "--" + mImage;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mName);
+        dest.writeString(mId);
+        dest.writeString(mImage);
+    }
+    public final Parcelable.Creator<MyAppArtist> CREATOR = new Parcelable.Creator<MyAppArtist>() {
+
+        @Override
+        public MyAppArtist createFromParcel(Parcel source) {
+            return new MyAppArtist(source);
+        }
+
+        @Override
+        public MyAppArtist[] newArray(int size) {
+            return new MyAppArtist[size];
+        }
+    };
 }

@@ -48,6 +48,7 @@ public class MainActivityFragment extends Fragment {
 
     private static final String SEARCH_TEXT = "SEARCH_TEXT";
     private static final long SEARCH_WAIT_TIME = 500; // milliseconds
+    private static final String ARTIST_SEARCH_RESULTS = "artists";
 
     private static final String ARTIST_SCROLL_POSITION = "ARTIST_SCROLL_POSITION";
 
@@ -55,6 +56,8 @@ public class MainActivityFragment extends Fragment {
     private EditText mSearchText;
     private ListView mListView;
     private ArtistAdapter mArtistAdapter;
+
+    private ArrayList<MyAppArtist> mAppArtists;
 
     private int mScrollPosition;
     private Toast mToast;
@@ -76,14 +79,6 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // if rotated, restore the scroll position, otherwise set to 0
-        if (savedInstanceState ==null) {
-            mScrollPosition=0;
-        }
-        else {
-            mScrollPosition = savedInstanceState.getInt(ARTIST_SCROLL_POSITION);
-        }
-
         View rootView = inflater.inflate(R.layout.fragment_main, container);
 
         // Set up the Adapter and attach it to the ListView
@@ -91,8 +86,18 @@ public class MainActivityFragment extends Fragment {
         mProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
         mProgressBar.setVisibility(View.INVISIBLE);
 
-        List<MyAppArtist> myAppArtist = new ArrayList<MyAppArtist>();
-        mArtistAdapter = new ArtistAdapter (mContext, myAppArtist);
+        // if rotated, restore the scroll position, otherwise set to 0
+        if (savedInstanceState ==null) {
+            mScrollPosition=0;
+            mAppArtists = new ArrayList<MyAppArtist>();
+        }
+        else {
+            mScrollPosition = savedInstanceState.getInt(ARTIST_SCROLL_POSITION);
+            mAppArtists = savedInstanceState.getParcelableArrayList(ARTIST_SEARCH_RESULTS);
+        }
+
+
+        mArtistAdapter = new ArtistAdapter (mContext, mAppArtists);
         mListView = (ListView) rootView.findViewById(R.id.artist_listing);
         mListView.setAdapter(mArtistAdapter);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -116,20 +121,17 @@ public class MainActivityFragment extends Fragment {
                 mSearchText.setCursorVisible(true);
             }
         });
-        if (mUserTextSearchEntry == null) {
 
-            mArtistAdapter.clear();
-            mArtistAdapter.notifyDataSetChanged();
-        }
         mSearchText.addTextChangedListener(new TextWatcher() {
             Timer timer = new Timer();
-            long textDelay=SEARCH_WAIT_TIME;
+            long textDelay = SEARCH_WAIT_TIME;
+
             public void afterTextChanged(final Editable s) {
                 mListView.clearFocus();
                 if (s.toString().equals(mUserTextSearchEntry)) {
                     mListView.setSelection(mScrollPosition);
-                }
-                else {
+                    return;
+                } else {
                     mListView.setSelection(-1);
                 }
                 mUserTextSearchEntry = s.toString();
@@ -151,16 +153,17 @@ public class MainActivityFragment extends Fragment {
                                     mProgressBar.setVisibility(View.VISIBLE);
                                 }
                             });
-
                             a.execute(mUserTextSearchEntry);
                         }
                     }
 
                 }, textDelay);
             }
+
             public void beforeTextChanged(CharSequence s, int start,
                                           int count, int after) {
             }
+
             public void onTextChanged(CharSequence s, int start,
                                       int before, int count) {
 
@@ -168,10 +171,14 @@ public class MainActivityFragment extends Fragment {
         });
 
         if (savedInstanceState != null) {
-            mSearchText.setText(savedInstanceState.getString(SEARCH_TEXT));
-            Log.d(TAG, "SEARCH NOT NULL: " + savedInstanceState.getString(SEARCH_TEXT));
+            mUserTextSearchEntry = savedInstanceState.getString(SEARCH_TEXT);
+            mSearchText.setText(mUserTextSearchEntry);
         }
-        Log.d(TAG, "searchtextentry: " + mUserTextSearchEntry);
+        else if (mUserTextSearchEntry == null) {
+
+            mArtistAdapter.clear();
+            mArtistAdapter.notifyDataSetChanged();
+        }
         return rootView;
     }
 
@@ -179,9 +186,13 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
+
         savedInstanceState.putString(SEARCH_TEXT, mUserTextSearchEntry);
         mScrollPosition = mListView.getFirstVisiblePosition();
         savedInstanceState.putInt(ARTIST_SCROLL_POSITION, mScrollPosition);
+
+        savedInstanceState.putParcelableArrayList(ARTIST_SEARCH_RESULTS, mAppArtists);
+
     }
 
     // AsyncTask to search for artists and update the listview
@@ -197,7 +208,6 @@ public class MainActivityFragment extends Fragment {
                 mToast.cancel();
             }
             String searchTerm = params[0];
-            Log.d(TAG, "searchterm: " + searchTerm);
             if (searchTerm.length()==0) {
                 return null;
             }
@@ -232,13 +242,11 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(ArtistsPager a) {
-            Log.d(TAG, networkConnection+"");
             super.onPostExecute(a);
             if (mToast != null) {
                 mToast.cancel();
             }
             if (!networkConnection) {
-                Log.d(TAG, networkConnection+"");
                 mToast = Toast.makeText(mContext, getResources().getString(R.string.network_connection_error), Toast.LENGTH_SHORT);
                 mToast.show();
                 return;
@@ -250,6 +258,7 @@ public class MainActivityFragment extends Fragment {
             }
 
             mArtistAdapter.clear();
+            mAppArtists.clear();
             if (a != null) {
                 for (Artist artist : a.artists.items) {
                     String image = "";
@@ -259,7 +268,8 @@ public class MainActivityFragment extends Fragment {
                         image = artist.images.get(artist.images.size()-2).url;
                     }
                     MyAppArtist myArtist = new MyAppArtist(artist.name, artist.id, image);
-                    mArtistAdapter.add(myArtist);
+                    // mArtistAdapter.add(myArtist);
+                    mAppArtists.add(myArtist);
                     mListView.setSelection(mScrollPosition);
                     mArtistAdapter.notifyDataSetChanged();
 

@@ -2,11 +2,17 @@ package com.brianduverneay.spotifystreamer.ui;
 
 import android.app.FragmentManager;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -18,9 +24,22 @@ import android.view.View;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.support.v7.widget.ShareActionProvider;
+import android.widget.Toast;
 
 import com.brianduverneay.spotifystreamer.R;
+import com.brianduverneay.spotifystreamer.data.MusicContract;
+import com.brianduverneay.spotifystreamer.music_model.MyAppTrack;
 import com.brianduverneay.spotifystreamer.services.MyAppPlayerService;
+
+import java.util.HashMap;
+import java.util.List;
+
+import kaaes.spotify.webapi.android.SpotifyApi;
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Image;
+import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.Tracks;
+import retrofit.RetrofitError;
 
 
 public class MainActivity extends ActionBarActivity implements MainActivityFragment.Callback {
@@ -32,9 +51,21 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
     public static final String DIALOG_TAG = "dialog";
     public static final String SELECTED_TRACK_POSITION = "POSITION";
 
+    private static final String US_COUNTRY_CODE = "US"; // ISO 3166-1 alpha-2 country code
+    private static final String QUERY_COUNTRY = "country";
+
     private boolean mTwoPane = false;
     private boolean mIsLargeScreen;
     private boolean mPlayerBind = true; //currently not accessed, do i need this?
+
+    private Toast mToast;
+
+    private Context mContext;
+    private SpotifyApi mApi;
+    private SpotifyService mSpotify;
+
+    private String mArtistName;
+    private String mArtistId;
 
     // Mediaplayer service variables
     public MyAppPlayerService myAppPlayerService;
@@ -42,16 +73,14 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
-
+        mContext = this;
         mIsLargeScreen = getResources().getBoolean(R.bool.large_layout);
 
         myAppPlayerService = new MyAppPlayerService();
         mConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.d(TAG, "onServiceConnected running...");
                 MyAppPlayerService.MusicBinder binder = (MyAppPlayerService.MusicBinder) service;
                 myAppPlayerService = binder.getService();
                 mPlayerBind = true;
@@ -80,18 +109,16 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
         }
     }
 
-
-
     @Override
     public void onItemSelected(String artistId, String artistName) {
 
-        Log.d(TAG, "Artist Id: " + artistId);
+        mArtistId = artistId;
+        mArtistName = artistName;
+        TopTracks topTracks = new TopTracks();
+        topTracks.execute(mArtistId);
+
         if (mTwoPane == true) {
-            Bundle args = new Bundle();
-            args.putString(ArtistDetail.ARTIST_ID, artistId);
-            args.putString(ArtistDetail.ARTIST_NAME, artistName);
             ArtistDetailFragment fragment = new ArtistDetailFragment();
-            fragment.setArguments(args);
             getFragmentManager().beginTransaction()
                     .replace(R.id.artist_detail_container, fragment, ARTISTDETAILFRAGMENT_TAG)
                     .commit();
@@ -99,10 +126,6 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
         else {
 
             Intent intent = new Intent(this, ArtistDetail.class);
-            Bundle extras = new Bundle();
-            extras.putString(ArtistDetail.ARTIST_ID, artistId);
-            extras.putString(ArtistDetail.ARTIST_NAME, artistName);
-            intent.putExtras(extras);
             startActivity(intent);
         }
     }
@@ -110,10 +133,6 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         // Inflate the menu; this adds items to the action bar if it is present.
-
-        // TODO
-        // need to add logic to only show now playing when musicplayer is playing
-
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -129,27 +148,19 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
-        // TODO
-        // need to handle both large and small screen
+
         if (id == R.id.action_now_playing) {
             FragmentManager fragmentManager = getFragmentManager();
-
 
             MusicPlayerActivityFragment newFragment = new MusicPlayerActivityFragment();
             //fragmentManager.beginTransaction().add(newFragment, NOWPLAYING_TAG);
             // int trackIndex = myAppPlayerService.getTrackIndex();
             if (mIsLargeScreen) {
                 Bundle args = new Bundle();
-
-
-                // Log.d("MAIN track index: ", trackIndex+"");
-                // args.putInt(SELECTED_TRACK_POSITION, trackIndex);
-                // newFragment.setArguments(args);
                 newFragment.show(fragmentManager, NOWPLAYING_TAG);
             }
             else {
                 Intent intent = new Intent(this, MusicPlayerActivity.class);
-                // intent.putExtra(SELECTED_TRACK_POSITION, trackIndex);
                 startActivity(intent);
             }
         }
@@ -166,7 +177,10 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
     public boolean onPrepareOptionsMenu(Menu menu) {
         boolean returnvalue = super.onPrepareOptionsMenu(menu);
         MenuItem item = menu.findItem(R.id.action_now_playing);
-        if (!myAppPlayerService.isInitialized()) {
+        if (myAppPlayerService.isPlaying() ) {
+            item.setVisible(true);
+        }
+        else if (!myAppPlayerService.isInitialized()) {
             item.setVisible(false);
         }
         else {
@@ -179,6 +193,110 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
         super.onDestroy();
         if (mConnection != null) {
             this.unbindService(mConnection);
+        }
+    }
+    private class TopTracks extends AsyncTask<String, Void, List<Track>> {
+
+        private boolean exceptionThrown=false;
+        private boolean networkConnection=false;
+        @Override
+        protected List<Track> doInBackground(String... params) {
+
+            ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+
+            HashMap<String, Object> queryMap = new HashMap<String, Object>();
+
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            String countryCodePref = sharedPrefs.getString(getString(R.string.pref_country_key), US_COUNTRY_CODE);
+            queryMap.put(QUERY_COUNTRY, countryCodePref);
+            Tracks results;
+
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                networkConnection = true;
+                //network connected
+                mApi = new SpotifyApi();
+                mSpotify = mApi.getService();
+                try {
+                    results = mSpotify.getArtistTopTrack(params[0], queryMap);
+                } catch (RetrofitError e) {
+
+                    e.printStackTrace();
+                    exceptionThrown = true;
+                    return null;
+                }
+            }
+            else {
+                networkConnection=false;
+                return null;
+            }
+            return results.tracks;
+        }
+
+        @Override
+        protected void onPostExecute(List<Track> tracks) {
+            super.onPostExecute(tracks);
+            if (mToast != null) {
+                mToast.cancel();
+            }
+            if (!networkConnection) {
+                mToast = Toast.makeText(mContext, getResources().getString(R.string.network_connection_error), Toast.LENGTH_SHORT);
+                mToast.show();
+                return;
+            }
+            if (exceptionThrown) {
+                mToast = Toast.makeText(mContext, getResources().getString(R.string.spotify_connection_error), Toast.LENGTH_SHORT);
+                mToast.show();
+                return;
+            }
+            int numRowsDeleted = mContext.getContentResolver().delete(MusicContract.SearchTrackEntry.CONTENT_URI, null, null);
+
+            if (tracks.size() > 0) {
+                for (Track track : tracks) {
+                    // Last item in array of images should be smallest, and quickest to load
+                    // First item in the array of images is highest quality.
+                    // This high quality image could be used for both top tracks fragment and player fragments
+                    int i;
+                    int numImages = track.album.images.size();
+
+                    String thumbImgUrl = "";
+                    String largeImgUrl = "";
+
+                    if (numImages != 0) {
+                        //Image imgThumb = track.album.images.get(numImages-1);
+                        Image largeImg = track.album.images.get(0);
+                        largeImgUrl = largeImg.url;
+                        if (numImages>1) {
+                            Image thumbImg = track.album.images.get(1);
+                            thumbImgUrl = thumbImg.url;
+                        } else {
+                            Image thumbImg = track.album.images.get(0);
+                            thumbImgUrl = thumbImg.url;
+                        }
+                    }
+                    ContentValues trackValues;
+                    trackValues = new ContentValues();
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_ARTIST_NAME, mArtistName);
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_TRACK_SPOTIFY_ID, track.id);
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_TRACK_NAME, track.name);
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_ALBUM_NAME, track.album.name);
+
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_DURATION, track.duration_ms);
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_IMAGE_LARGE, largeImgUrl);
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_IMAGE_THUMB, thumbImgUrl);
+                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_PREVIEW_URI, track.preview_url);
+
+                    MyAppTrack myTrack = new MyAppTrack(track.name, track.album.name, thumbImgUrl, track.preview_url, track.id);
+
+                    Uri uri = mContext.getContentResolver().insert(MusicContract.SearchTrackEntry.CONTENT_URI, trackValues);
+                    mContext.getContentResolver().notifyChange(uri, null);
+                }
+            }
+            else {
+                mToast = Toast.makeText(mContext, mContext.getString(R.string.no_tracks_message), Toast.LENGTH_SHORT);
+                mToast.show();
+            }
+            // mProgressBar.setVisibility(View.INVISIBLE);
         }
     }
 }

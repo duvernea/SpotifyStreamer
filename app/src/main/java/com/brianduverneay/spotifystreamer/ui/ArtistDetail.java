@@ -23,9 +23,6 @@ public class ArtistDetail extends ActionBarActivity {
     public static final String ARTIST_ID = "ARIST_ID";
     public static final String ARTIST_NAME = "ARIST_NAME";
 
-    private String mArtistName;
-    private String mArtistId;
-
     private boolean mIsLargeScreen;
 
     // Mediaplayer service variables
@@ -54,34 +51,11 @@ public class ArtistDetail extends ActionBarActivity {
         Intent playerIntent = new Intent(this, MyAppPlayerService.class);
         this.bindService(playerIntent, mConnection, Context.BIND_AUTO_CREATE);
 
-        Intent intent;
-        Bundle arguments = new Bundle();
-        if (savedInstanceState == null) {
-            intent = getIntent();
-            arguments = new Bundle();
-            mArtistId = intent.getStringExtra(ArtistDetail.ARTIST_ID);
-            mArtistName = intent.getStringExtra(ARTIST_NAME);
-        }
-        else {
-            mArtistId = savedInstanceState.getString(ARTIST_ID);
-            mArtistName = savedInstanceState.getString(ARTIST_NAME);
-        }
-
-            arguments.putString(ARTIST_ID, mArtistId);
-            arguments.putString(ARTIST_NAME, mArtistName);
-
             ArtistDetailFragment fragment = new ArtistDetailFragment();
-            fragment.setArguments(arguments);
 
             getFragmentManager().beginTransaction()
                     .replace(R.id.artist_detail_container, fragment)
                     .commit();
-    }
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putString(ARTIST_ID, mArtistId);
-        savedInstanceState.putString(ARTIST_NAME, mArtistName);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

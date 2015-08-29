@@ -50,7 +50,6 @@ import retrofit.RetrofitError;
 
 public class ArtistDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-
     private static final String TAG = ArtistDetail.class.getSimpleName();
     public static final String SELECTED_TRACK_POSITION = "POSITION";
     private static final String US_COUNTRY_CODE = "US"; // ISO 3166-1 alpha-2 country code
@@ -65,8 +64,8 @@ public class ArtistDetailFragment extends Fragment implements LoaderManager.Load
     private SpotifyService mSpotify;
     private TrackAdapter mTrackAdapter;
     private Toast mToast;
-    private String mArtistName;
-    private String mArtistId;
+    //private String mArtistName;
+    //private String mArtistId;
 
     int mPosition = 1;
 
@@ -111,13 +110,12 @@ public class ArtistDetailFragment extends Fragment implements LoaderManager.Load
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         mContext = getActivity();
         View rootView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
 
         mProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar_artist_detail);
 
-        mProgressBar.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.INVISIBLE);
 
         mIsLargeScreen = getResources().getBoolean(R.bool.large_layout);
 
@@ -140,16 +138,6 @@ public class ArtistDetailFragment extends Fragment implements LoaderManager.Load
         Intent intent = new Intent(mContext, MyAppPlayerService.class);
         mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
-        // get arguments passed in from intent, if new fragment
-        Bundle arguments = getArguments();
-        if (arguments != null) {
-            mArtistId= arguments.getString(ArtistDetail.ARTIST_ID, "");
-            mArtistName = arguments.getString(ArtistDetail.ARTIST_NAME, "");
-            //execute async task to search for top tracks and update trackadapter
-            TopTracks topTracks = new TopTracks();
-            topTracks.execute(mArtistId);
-            // mProgressBar.setVisibility(View.VISIBLE);
-        }
         mTrackAdapter = new TrackAdapter(mContext, null, 0);
 
         mListView= (ListView) rootView.findViewById(R.id.track_listing);
@@ -205,111 +193,6 @@ public class ArtistDetailFragment extends Fragment implements LoaderManager.Load
         });
         return rootView;
     }
-    private class TopTracks extends AsyncTask<String, Void, List<Track>> {
-
-        private boolean exceptionThrown=false;
-        private boolean networkConnection=false;
-        @Override
-        protected List<Track> doInBackground(String... params) {
-
-            ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-
-            HashMap<String, Object> queryMap = new HashMap<String, Object>();
-
-            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String countryCodePref = sharedPrefs.getString(getString(R.string.pref_country_key), US_COUNTRY_CODE);
-            queryMap.put(QUERY_COUNTRY, countryCodePref);
-            Tracks results;
-
-            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
-                networkConnection = true;
-                //network connected
-                mApi = new SpotifyApi();
-                mSpotify = mApi.getService();
-                try {
-                    results = mSpotify.getArtistTopTrack(params[0], queryMap);
-                } catch (RetrofitError e) {
-
-                    e.printStackTrace();
-                    exceptionThrown = true;
-                    return null;
-                }
-            }
-            else {
-                networkConnection=false;
-                return null;
-            }
-            return results.tracks;
-        }
-
-        @Override
-        protected void onPostExecute(List<Track> tracks) {
-            super.onPostExecute(tracks);
-            if (mToast != null) {
-                mToast.cancel();
-            }
-            if (!networkConnection) {
-                mToast = Toast.makeText(mContext, getResources().getString(R.string.network_connection_error), Toast.LENGTH_SHORT);
-                mToast.show();
-                return;
-            }
-            if (exceptionThrown) {
-                mToast = Toast.makeText(mContext, getResources().getString(R.string.spotify_connection_error), Toast.LENGTH_SHORT);
-                mToast.show();
-                return;
-            }
-            int numRowsDeleted = mContext.getContentResolver().delete(MusicContract.SearchTrackEntry.CONTENT_URI, null, null);
-
-            if (tracks.size() > 0) {
-                for (Track track : tracks) {
-                    // Last item in array of images should be smallest, and quickest to load
-                    // First item in the array of images is highest quality.
-                    // This high quality image could be used for both top tracks fragment and player fragments
-                    int i;
-                    int numImages = track.album.images.size();
-
-                    String thumbImgUrl = "";
-                    String largeImgUrl = "";
-
-                    if (numImages != 0) {
-                        //Image imgThumb = track.album.images.get(numImages-1);
-                        Image largeImg = track.album.images.get(0);
-                        largeImgUrl = largeImg.url;
-                        if (numImages>1) {
-                            Image thumbImg = track.album.images.get(1);
-                            thumbImgUrl = thumbImg.url;
-                        } else {
-                            Image thumbImg = track.album.images.get(0);
-                            thumbImgUrl = thumbImg.url;
-                        }
-                    }
-                    ContentValues trackValues;
-                    trackValues = new ContentValues();
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_ARTIST_NAME, mArtistName);
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_TRACK_SPOTIFY_ID, track.id);
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_TRACK_NAME, track.name);
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_ALBUM_NAME, track.album.name);
-
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_DURATION, track.duration_ms);
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_IMAGE_LARGE, largeImgUrl);
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_IMAGE_THUMB, thumbImgUrl);
-                    trackValues.put(MusicContract.SearchTrackEntry.COLUMN_PREVIEW_URI, track.preview_url);
-
-                    MyAppTrack myTrack = new MyAppTrack(track.name, track.album.name, thumbImgUrl, track.preview_url, track.id);
-
-                    Uri uri = mContext.getContentResolver().insert(MusicContract.SearchTrackEntry.CONTENT_URI, trackValues);
-                    mContext.getContentResolver().notifyChange(uri, null);
-                }
-            }
-            else {
-                mToast = Toast.makeText(mContext, mContext.getString(R.string.no_tracks_message), Toast.LENGTH_SHORT);
-                mToast.show();
-            }
-            mProgressBar.setVisibility(View.INVISIBLE);
-        }
-    }
-
     @Override
     public android.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri trackUri = MusicContract.SearchTrackEntry.CONTENT_URI;
