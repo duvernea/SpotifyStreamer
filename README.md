@@ -1,10 +1,16 @@
 #Spotify Streamer 
 ## Projects 1 & 2 of the Udacity Android Developer Nanodegree
 
-Built an app, optimized for tablet, that displays an artist's top 10 tracks on Spotify. The user interface allows for search capability, displays a list of the top 10 tracks in a scrolling list complete with album art, and provides streaming playback of audio using Android's mediaplayer API.
+Built an app, optimized for phone and tablet, that allows user to search by aritist on Spotify. The top 10 tracks from Artist are displayed in a scrolling list complete with album art. Tracks can be streamed via the player in the app, which utilizes Android's mediaplayer API.
 
-Getting Started
--------------
+Additional features implemented include:
+
+* Notifications with media controls from lockscreen and drawer.
+* Sharing functionality
+* Settings menu to select Country and turn Notifications on/off
+* "Now Playing" - instant access to the player from anywhere in the app
+
+No Spotify account is necessary for using this app, as the streamed samples are only partial versions of full track.
 
 Installation
 ------------
